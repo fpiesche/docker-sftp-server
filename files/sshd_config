@@ -1,0 +1,9 @@
+# A simple, reasonably secure sshd configuration file for an sftp-only server.
+
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+PrintMotd no
+
+Subsystem	sftp	/usr/lib/ssh/sftp-server
