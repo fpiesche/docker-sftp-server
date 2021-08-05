@@ -9,6 +9,10 @@ on:
       - main
     paths-ignore:
       - '**/*.md'
+  # Run on PRs except for documentation.
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
   
 env:
   PLATFORMS: linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64
@@ -39,8 +43,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN }}
-  
+
+      - name: Build sftp-server Docker image
+        if: github.ref != 'refs/heads/main'
+        uses: docker/build-push-action@v2
+        with:
+          platforms: ${{ env.PLATFORMS }}
+          push: false
+
       - name: Build and push sftp-server Docker image
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v2
         with:
           tags: |
