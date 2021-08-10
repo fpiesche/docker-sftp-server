@@ -8,56 +8,49 @@ if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
     ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ''
 fi
 
-echo "Create sftp user"
-addgroup -g 1000 sftp
-adduser --ingroup sftp --home /home/sftp --uid 1000 sftp
-# Set random long secure password on user sftp so logins are possible
+echo "Create user ${SFTP_USER}"
+addgroup -g 1000 ${SFTP_USER}
+adduser --ingroup ${SFTP_USER} --home /home/${SFTP_USER} --uid 1000 ${SFTP_USER}
+# Set random long secure password on user so logins are possible
 pass=$(echo date +%s | sha256sum | base64 | head -c 32; echo | mkpasswd) && \
-    echo "sftp:${pass}" | chpasswd
+    echo "${SFTP_USER}:${pass}" | chpasswd
 
-echo "Generate ssh key pairs for the sftp user"
-mkdir /home/sftp/.ssh
-if [ ! -f /home/sftp/.ssh/id_ed25519 ]; then
-    ssh-keygen -t ed25519 -f  /home/sftp/.ssh/id_ed25519 -N ''
+echo "Generate ssh key pairs for ${SFTP_USER}"
+mkdir /home/${SFTP_USER}/.ssh
+if [ ! -f /home/ ${SFTP_USER}/.ssh/id_ed25519 ]; then
+    ssh-keygen -t ed25519 -f  /home/${SFTP_USER}/.ssh/id_ed25519 -N ''
 fi
-if [ ! -f /home/sftp/.ssh/id_rsa ]; then
-    ssh-keygen -t rsa -b 4096 -f /home/sftp/.ssh/id_rsa -N ''
+if [ ! -f /home/${SFTP_USER}/.ssh/id_rsa ]; then
+    ssh-keygen -t rsa -b 4096 -f /home/${SFTP_USER}/.ssh/id_rsa -N ''
 fi
 
 echo "Restrict access to private keys"
-chown sftp /home/sftp/.ssh/* || true
-chmod 600 /home/sftp/.ssh/id_ed25519 || true
-chmod 600 /home/sftp/.ssh/id_rsa || true
+chown ${SFTP_USER} /home/${SFTP_USER}/.ssh/* || true
+chmod 600 /home/${SFTP_USER}/.ssh/id_ed25519 || true
+chmod 600 /home/${SFTP_USER}/.ssh/id_rsa || true
 chmod 600 /etc/ssh/ssh_host_ed25519_key || true
 chmod 600 /etc/ssh/ssh_host_rsa_key || true
 
 echo "Add authorized keys"
-if [ -d /home/sftp/.ssh/keys ]; then
-    for file in /home/sftp/.ssh/keys/*; do
+if [ -d /home/${SFTP_USER}/.ssh/keys ]; then
+    for file in /home/${SFTP_USER}/.ssh/keys/*; do
         echo "--- Adding $file..."
-        cat $file >> /home/sftp/.ssh/authorized_keys
+        cat $file >> /home/${SFTP_USER}/.ssh/authorized_keys
     done
     # Make sure we're not adding duplicate keys
-    sort /home/sftp/.ssh/authorized_keys | uniq > /home/sftp/.ssh/authorized_keys.unique
-    mv /home/sftp/.ssh/authorized_keys.unique /home/sftp/.ssh/authorized_keys
+    sort /home/${SFTP_USER}/.ssh/authorized_keys | uniq > /home/${SFTP_USER}/.ssh/authorized_keys.unique
+    mv /home/${SFTP_USER}/.ssh/authorized_keys.unique /home/${SFTP_USER}/.ssh/authorized_keys
 
     echo "Set permissions for authorized_keys file"
-    chmod 0644 /home/sftp/.ssh/authorized_keys
-    chown sftp:sftp /home/sftp/.ssh/*
+    chmod 0644 /home/${SFTP_USER}/.ssh/authorized_keys
+    chown ${SFTP_USER}:${SFTP_USER} /home/${SFTP_USER}/.ssh/*
 fi
 
 echo "Run custom scripts"
-if [ -d /etc/sftp.d ]; then
-    for f in /etc/sftp.d/*; do
-        if [ -x "$f" ]; then
-            echo "Running $f ..."
-            $f
-        else
-            echo "Could not run $f because it's missing execute permission (+x)."
-        fi
-    done
-    unset f
-fi
+for f in /etc/sftp.d/*; do
+    echo "Running $f ..."
+    /bin/sh $f
+done
 
 echo "Launching sshd"
 exec /usr/sbin/sshd -D -e
