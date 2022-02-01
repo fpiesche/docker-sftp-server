@@ -1,9 +1,72 @@
-# A simple, reasonably secure sshd configuration file for an sftp-only server.
+# A reasonably secure sshd configuration file for an sftp-only server.
 
+# Disable root login.
 PermitRootLogin no
-PubkeyAuthentication yes
-PasswordAuthentication no
-ChallengeResponseAuthentication no
-PrintMotd no
 
+# Secure Login directives.
+LoginGraceTime 30s
+MaxAuthTries 2
+MaxSessions 10
+MaxStartups 10:30:100
+
+# Enable public key authentication
+PubkeyAuthentication yes
+
+# Never use host-based authentication. It can be exploited.
+IgnoreRhosts yes
+IgnoreUserKnownHosts yes
+HostbasedAuthentication no
+
+# Set AuthenticationMethods per default to publickey
+AuthenticationMethods publickey
+
+# Disable password-based authentication, it can allow for potentially easier brute-force attacks.
+PasswordAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Network
+# -------
+
+# Disable TCP keep alive since it is spoofable. Use ClientAlive messages instead, they use the encrypted channel
+TCPKeepAlive no
+
+# Manage `ClientAlive..` signals via interval and maximum count. This will periodically check up to a `..CountMax` number of times within `..Interval` timeframe, and abort the connection once these fail.
+ClientAliveInterval 300
+ClientAliveCountMax 3
+
+# Disable tunneling
+PermitTunnel no
+
+# Disable forwarding tcp connections.
+# no real advantage without denied shell access
+AllowTcpForwarding no
+
+# Disable agent forwarding, since local agent could be accessed through forwarded connection.
+# no real advantage without denied shell access
+AllowAgentForwarding no
+
+# Do not allow remote port forwardings to bind to non-loopback addresses.
+GatewayPorts no
+
+# Disable X11 forwarding, since local X11 display could be accessed through forwarded connection.
+X11Forwarding no
+X11UseLocalhost yes
+
+# User environment configuration
+PermitUserEnvironment no
+
+
+# Misc. configuration
+Compression no
+UseDNS no
+PrintMotd no
+Banner none
+
+# Reject keys that are explicitly blacklisted
+RevokedKeys /etc/ssh/revoked_keys
+
+# Force sftp only.
 Subsystem	sftp	/usr/lib/ssh/sftp-server
+Match Group users
+ForceCommand internal-sftp
