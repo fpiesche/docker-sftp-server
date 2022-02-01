@@ -1,7 +1,7 @@
 FROM alpine:3.15.0
 
 # Set up base image
-RUN apk add --no-cache openssh openssh-sftp-server && \
+RUN apk add --no-cache bash openssh openssh-sftp-server && \
     # Create /var/run/sshd/
     mkdir -p /var/run/sshd && \
     # Create /etc/sftp.d/ for init scripts
@@ -13,8 +13,7 @@ COPY files/sshd_config /etc/ssh/sshd_config
 COPY files/entrypoint.sh /
 
 EXPOSE 22
-ENV SFTP_USER="sftp"
 
-VOLUME [ "/etc/ssh/", "/etc/sftp.d/", "/home/${SFTP_USER}/.ssh/keys" ]
+VOLUME [ "/etc/ssh/", "/etc/sftp.d/", "/authorized_keys" ]
 
 CMD [ "/entrypoint.sh" ]
