@@ -18,6 +18,10 @@ function setup_user () {
     pass=$(cat /dev/urandom | head -c 2048 | sha256sum | head -c 64; echo | mkpasswd)
     echo "${username}:${pass}" | chpasswd
 
+    echo "Change ownership of /home/${username}/ to root"
+    chown root:root /home/${username}
+    chmod 755 /home/${username}
+
     echo "Set up .ssh directory for ${username}"
     mkdir /home/${username}/.ssh
     chown ${username}:users /home/${username}/.ssh
@@ -28,15 +32,24 @@ function setup_user () {
     chmod 0644 /home/${username}/.ssh/authorized_keys
 }
 
-for filename in /authorized_keys/*; do
-    setup_user $filename
-done
+if [ "$(ls -A /authorized_keys/)" ]; then
+    for filename in /authorized_keys/*; do
+        setup_user $filename
+    done
+else
+    echo "No authorized keys found to add; no users to define!"
+    exit 1
+fi
 
-echo "Run custom scripts"
-for f in /etc/sftp.d/*; do
-    echo "Running $f ..."
-    /bin/sh $f
-done
+if [ "$(ls -A /authorized_keys/)" ]; then
+    echo "Run custom scripts"
+    for f in /etc/sftp.d/*; do
+        echo "Running $f ..."
+        /bin/sh $f
+    done
+else
+    echo "No custom scripts found to run."
+fi
 
 echo "Launching sshd"
 exec /usr/sbin/sshd -D -e
