@@ -9,7 +9,7 @@ RUN apk add --no-cache bash openssh openssh-sftp-server && \
     # Remove default host keys
     rm -f /etc/ssh/ssh_host_*key*
 
-COPY files/sshd_config /etc/ssh/sshd_config
+COPY files/ssh_configuration/* /etc/ssh/
 COPY files/entrypoint.sh /
 
 EXPOSE 22

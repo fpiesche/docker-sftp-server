@@ -69,4 +69,7 @@ RevokedKeys /etc/ssh/revoked_keys
 # Force sftp only.
 Subsystem	sftp	/usr/lib/ssh/sftp-server
 Match Group users
-ForceCommand internal-sftp
+    ChrootDirectory %h
+    ForceCommand internal-sftp
+    AllowTCPForwarding no
+    X11Forwarding no
