@@ -40,8 +40,7 @@ function setup_user () {
     chown ${username}:users /home/${username}/.ssh
 
     echo "Adding authorized keys..."
-    mkdir /home/${username}/.ssh/authorized_keys
-    cp ${keyfile} /home/${username}/.ssh/authorized_keys/${username}.pub
+    cp ${keyfile} /home/${username}/.ssh/authorized_keys
     chown -R ${username}:users /home/${username}/.ssh
     chmod 0644 /home/${username}/.ssh/authorized_keys
 }
