@@ -10,10 +10,23 @@ fi
 
 function setup_user () {
     keyfile=$1
-    username=$(basename ${keyfile%.*})
+    filename=$(basename ${keyfile%.*})
+
+    readarray -d "." -t arr < <(printf '%s' "$filename")
+
+    username=${arr[0]}
+    uid=${arr[1]}
 
     echo "Adding user $username for $keyfile..."
-    adduser --disabled-password --ingroup users --home /home/${username} ${username}
+
+    if [[ -z "${uid}" ]]; then
+      #echo "No UID given"
+      adduser --disabled-password --ingroup users --home /home/${username} ${username}
+    else
+      echo "Using UID $uid"
+       adduser --disabled-password --ingroup users --uid $uid --home /home/${username} ${username}
+    fi
+
     # Set random long secure password on user so logins are possible
     pass=$(cat /dev/urandom | head -c 2048 | sha256sum | head -c 64; echo | mkpasswd)
     echo "${username}:${pass}" | chpasswd
