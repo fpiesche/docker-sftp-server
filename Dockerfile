@@ -1,4 +1,4 @@
-FROM alpine:3.18.3
+FROM alpine:3.18.4
 
 # Set up base image
 RUN apk add --no-cache bash openssh openssh-sftp-server && \
